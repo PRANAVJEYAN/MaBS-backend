@@ -31,4 +31,9 @@ const submitContactForm = async (req, res) => {
   }
 };
 
+// Placeholder function for getFooterContact
+const getFooterContact = (req, res) => {
+  res.status(200).json({ message: 'Footer contact information not implemented yet' });
+};
+
 module.exports = { submitContactForm, getFooterContact };
