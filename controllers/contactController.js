@@ -36,4 +36,33 @@ const getFooterContact = (req, res) => {
   res.status(200).json({ message: 'Footer contact information not implemented yet' });
 };
 
+const testEmailFunctionality = async () => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_RECEIVER,
+      subject: 'Test Email',
+      text: 'This is a test email to verify the email functionality.',
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log('Test email sent successfully');
+  } catch (error) {
+    console.error('Failed to send test email:', error);
+  }
+};
+
+// Call the test function
+if (require.main === module) {
+  testEmailFunctionality();
+}
+
 module.exports = { submitContactForm, getFooterContact };
