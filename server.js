@@ -9,26 +9,29 @@ dotenv.config();
 
 // Initialize Express app
 const app = express();
-
-// Middleware
 app.use(express.json());
 
-// CORS configuration
+// Define allowed origins
 const allowedOrigins = [
-  'http://localhost:5173', // Development
-  'https://mabs-eight.vercel.app', // Production (no trailing slash)
+  'http://localhost:5173',
+  'https://mabs-eight.vercel.app',
 ];
 
+// CORS configuration
 app.use(cors({
   origin: (origin, callback) => {
-    if (process.env.NODE_ENV !== 'production') {
-      return callback(null, true); // Allow all in dev
+    if (!origin) {
+      // Allow requests with no origin (like mobile apps or curl)
+      return callback(null, true);
     }
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true); // Allow whitelisted in prod
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
+
+    console.error(`Blocked by CORS: ${origin}`);
     return callback(new Error('Not allowed by CORS'));
-  },
+  }
 }));
 
 // Serve static files in production
@@ -55,29 +58,31 @@ const sendEmail = async (formData, res) => {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_RECEIVER,
       subject: 'New Form Submission',
-      text: `Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nLocation: ${formData.location || formData.country}\nMessage: ${formData.message}`,
+      text: `Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+Location: ${formData.location || formData.country}
+Message: ${formData.message}`,
     };
 
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: 'Email sent successfully!' });
   } catch (error) {
     console.error('Error sending email:', error);
-
-    if (error.response) {
-      res.status(500).json({ error: `Failed to send email: ${error.response}` });
-    } else if (error.code === 'EAUTH') {
-      res.status(500).json({ error: 'Authentication failed. Please check email credentials.' });
+    if (error.code === 'EAUTH') {
+      res.status(500).json({ error: 'Authentication failed. Check your email credentials.' });
     } else {
-      res.status(500).json({ error: 'An unexpected error occurred while sending the email.' });
+      res.status(500).json({ error: 'Error sending email.' });
     }
   }
 };
 
-// Routes
+// API Route to send email
 app.post('/api/send-mail', (req, res) => {
   sendEmail(req.body, res);
 });
 
+// API Route to test email
 app.get('/api/test-mail', async (req, res) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -99,18 +104,11 @@ app.get('/api/test-mail', async (req, res) => {
     res.status(200).json({ message: 'Test email sent successfully!' });
   } catch (error) {
     console.error('Error sending test email:', error);
-
-    if (error.response) {
-      res.status(500).json({ error: `Failed to send test email: ${error.response}` });
-    } else if (error.code === 'EAUTH') {
-      res.status(500).json({ error: 'Authentication failed. Please check email credentials.' });
-    } else {
-      res.status(500).json({ error: 'An unexpected error occurred while sending the test email.' });
-    }
+    res.status(500).json({ error: 'Failed to send test email.' });
   }
 });
 
-// Start server
+// Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
