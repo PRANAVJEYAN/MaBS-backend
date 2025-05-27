@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 // Controller to handle contact form submissions
 const submitContactForm = async (req, res) => {
