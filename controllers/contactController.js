@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 // Controller to handle contact form submissions
 const submitContactForm = async (req, res) => {
   try {
-    const { name, email, phone, location, message } = req.body;
+    const { name, email, phone, country, service, message } = req.body;
 
     // Configure Nodemailer
     const transporter = nodemailer.createTransport({
@@ -19,7 +19,7 @@ const submitContactForm = async (req, res) => {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_RECEIVER,
       subject: 'New Contact Form Submission',
-      text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nLocation: ${location}\nMessage: ${message}`,
+      text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nCountry: ${country}\nService: ${service}\nMessage: ${message}`,
     };
 
     // Send email
@@ -28,6 +28,40 @@ const submitContactForm = async (req, res) => {
     res.status(201).json({ message: 'Contact form submitted and email sent successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to submit contact form or send email' });
+  }
+};
+
+// Controller to handle newsletter subscriptions
+const subscribeNewsletter = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Configure Nodemailer
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // Email options
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_RECEIVER,
+      subject: 'New Newsletter Subscription',
+      text: `New newsletter subscription:\nEmail: ${email}`,
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+
+    res.status(201).json({ message: 'Subscription successful' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to subscribe to newsletter' });
   }
 };
 
@@ -65,4 +99,4 @@ if (require.main === module) {
   testEmailFunctionality();
 }
 
-module.exports = { submitContactForm, getFooterContact };
+module.exports = { submitContactForm, getFooterContact, subscribeNewsletter };
